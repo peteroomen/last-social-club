@@ -424,7 +424,7 @@ button.primary{background:#dda649;border-color:#f3cf7e;box-shadow:inset 0 0 0 2p
 @media(orientation:landscape) and (min-width:600px){
  .table-screen .active-hand .hand-label{visibility:hidden;pointer-events:none}
  .table-screen .active-hand .hand-label:has(button){visibility:visible}
- .table-screen .table-bottom{bottom:28px}
+ .table-screen .table-bottom{bottom:clamp(28px,6dvh,80px)}
  .table-screen .mug{bottom:30px;right:14%}
  .table-screen .action-panel{overflow:hidden;gap:3px}
  .table-screen .suit-picker button{width:24px;min-width:24px}
@@ -432,3 +432,6 @@ button.primary{background:#dda649;border-color:#f3cf7e;box-shadow:inset 0 0 0 2p
  .table-screen .stakes{white-space:nowrap;font-size:.7rem}
  .table-screen .error,.room-screen .error{position:absolute;top:45px;left:10px;right:10px;z-index:40}
 }
+
+/* Native buttons otherwise centre the corner label vertically. */
+.playing-card{align-content:start}
