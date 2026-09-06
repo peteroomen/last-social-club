@@ -435,3 +435,102 @@ button.primary{background:#dda649;border-color:#f3cf7e;box-shadow:inset 0 0 0 2p
 
 /* Native buttons otherwise centre the corner label vertically. */
 .playing-card{align-content:start}
+
+/* Paper, pencil and cross-stacked tricks. The contract stays clear of both hands. */
+.pencil-number{height:1em;display:inline-block;vertical-align:-.12em;overflow:visible;transform:rotate(-3deg)}
+.pencil-number path{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.playing-card{image-rendering:auto;backface-visibility:hidden;border-radius:4px;border:1px solid #cbb780;background:radial-gradient(ellipse at 0 100%,#b7904320,transparent 40%),linear-gradient(112deg,#f9eac6,#efdaad);box-shadow:0 2px 3px #10110e66,inset 0 0 0 1px #fff2c555}
+.playing-card::before{content:'';position:absolute;inset:4px;border:1px solid #b9a26b26;border-radius:2px;pointer-events:none}
+.table-screen .full-hand .playing-card{border-radius:4px;box-shadow:0 2px 3px #10110e77,inset 0 0 0 1px #fff2c555}
+.playing-card.small{border-radius:3px}
+.playing-card .card-corner{position:relative;z-index:2}
+.suit-rewrite{position:absolute;bottom:17px;left:4px;font-size:.68rem;color:#705137;letter-spacing:-1px}
+.enchant-inkS,.enchant-inkC,.enchant-inkD,.enchant-inkH{background:radial-gradient(ellipse at 12% 75%,#798caa42,transparent 50%),linear-gradient(110deg,#f7e8c2,#e4d0a0)!important;border-color:#789096!important}
+.stamp.inkS,.stamp.inkC,.stamp.inkD,.stamp.inkH{background:#d5e1d7;color:#253d4a;border-color:#789096;clip-path:none;border-radius:50%}
+.contract-board{position:absolute;top:12px;left:20%;right:20%;z-index:7;display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:5px;align-items:center;pointer-events:auto}
+.contract-ticket,.trick-pile{height:45px;min-height:45px;padding:2px 4px;border:1px solid #b19b68;box-shadow:1px 2px 1px #0d241688;background:#eddeb7;color:#233f41;line-height:1}
+.contract-ticket small,.trick-pile small{display:block;font-size:.57rem;letter-spacing:.7px;white-space:nowrap}
+.contract-ticket strong{font-size:1.4rem;display:flex;align-items:center;justify-content:center;gap:3px;font-weight:400;margin-top:2px}
+.contract-ticket .red-text{color:#963329}.contract-ticket strong>span{font-size:1.15rem}
+.contract-ticket:hover:not(:disabled),.trick-pile:hover:not(:disabled){background:#faecca}
+.trick-pile{background:#172e25;color:#e4d2a1;border-color:#987440;box-shadow:inset 0 0 0 1px #40543a;min-width:0}
+.trick-pile:hover:not(:disabled){background:#294335}
+.pile-content{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:3px}
+.stack-cards{position:relative;display:block;width:26px;height:23px;flex-shrink:0;isolation:isolate}
+.stack-cards::before{content:'';position:absolute;inset:3px;border:1px dashed #9b925355;border-radius:2px}
+.stack-cards i{position:absolute;width:15px;height:22px;left:5px;top:3px;border:1px solid #f0d6a2;background:#6f322d;box-shadow:inset 0 0 0 2px #432820,0 1px 1px #0e1716;transform-origin:center}
+.trick-total{font-size:1.3rem}.pile-awarded .trick-total{animation:pencil-tally 450ms ease-out}
+.board-turn{grid-column:1/-1;text-align:center;font-size:.66rem;line-height:1;white-space:nowrap;min-height:13px;text-shadow:1px 1px #0c251b;color:#f1dfb3}
+.bid-stamped{animation:bid-stamp 480ms cubic-bezier(.2,.8,.2,1) both}
+.auction-scene{position:relative;display:grid;place-items:center}
+.bid-announcement{position:absolute;inset:auto;background:#f0dba9;color:#24382f;border:1px solid #b49559;padding:3px 13px;min-width:80px;box-shadow:3px 4px #0a2318;animation:bid-announcement 1.3s ease both;pointer-events:none;rotate:-4deg}
+.bid-announcement small{display:block;font-size:.64rem}.bid-announcement b{font-size:1.8rem;font-weight:400;line-height:1}
+.next-bids{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:100%}
+.next-bid{padding:2px!important;min-width:0;min-height:47px;font-size:1.35rem;line-height:.95;background:#ead7aa;color:#1c3027;border:1px solid #c8a15c;box-shadow:inset 0 0 0 1px #fff0be,1px 2px #11261c}
+.next-bid span{display:block;font-size:1.1rem}.next-bid.red-text{color:#9b362b}.next-bid:hover:not(:disabled){background:#fff0c4;translate:0 -2px}
+.pass-bid{min-height:35px;padding:3px;margin:0;font-size:1.05rem}
+.joker-call{display:flex;gap:3px;align-items:center;font-size:.7rem;justify-content:center}
+.joker-call button{min-height:27px;min-width:25px;padding:0;font-size:1rem}.joker-call [aria-pressed=true]{background:#b68d4b;color:#15291f}
+.rule-toggle{min-height:25px;padding:3px;font-size:.69rem;line-height:1;background:#23382c}
+.rule-toggle[aria-pressed=true]{background:#dcc484;color:#273828;border-color:#f8dc90;box-shadow:0 0 6px #eac16b66}
+.winning-card{z-index:12!important;animation:winner-jolt 900ms ease-out both!important}
+.winning-card>.playing-card{outline:2px solid #ffe3a0;box-shadow:0 0 10px #f5be6d,0 0 22px #e4ae5444!important}
+.winning-card::after{content:'✦';position:absolute;right:-13px;top:-11px;color:#ffe4a3;font-size:1.6rem;animation:win-spark 700ms ease-out both}
+.collecting-trick .trick-play{visibility:hidden}
+.trick-flight{position:fixed;inset:0;pointer-events:none;z-index:90}
+.flying-card{position:fixed;animation:trick-zip 580ms cubic-bezier(.35,.04,.7,1) both;transform-origin:center}
+.flying-card>.playing-card{width:100%;height:100%;aspect-ratio:unset;padding:3px}
+.flying-card .card-corner{font-size:.85rem}.flying-card .card-corner>span{font-size:.7rem}.flying-card .card-pip{font-size:1.3rem}
+.flying-winner>.playing-card{box-shadow:0 0 10px #e8c473;outline:1px solid #ffe4a0}
+.score-meter{background-image:repeating-linear-gradient(0deg,transparent 0 17px,#61818a14 17px 18px)!important}
+.regular-card.rule-fired{animation:regular-trigger 650ms ease-out 2}
+@keyframes winner-jolt{0%{transform:scale(1)}14%{transform:scale(1.12) rotate(-7deg);filter:brightness(1.65)}25%{transform:scale(1.13) rotate(5deg)}38%{transform:scale(1.08) rotate(-3deg)}65%,100%{transform:scale(1.06);filter:brightness(1.12)}}
+@keyframes win-spark{0%{opacity:0;scale:.3;rotate:-40deg}25%{opacity:1;scale:1.3}100%{opacity:0;scale:.6;rotate:50deg}}
+@keyframes trick-zip{0%{transform:translate(0,0) scale(1);opacity:1}20%{transform:translate(0,-6px) rotate(-6deg) scale(1.06)}90%{opacity:1}100%{transform:translate(var(--flight-x),var(--flight-y)) rotate(var(--flight-rotate)) scale(.36);opacity:0}}
+@keyframes pencil-tally{0%{scale:1.55;filter:brightness(1.7)}100%{scale:1;filter:brightness(1)}}
+@keyframes bid-stamp{0%{opacity:0;transform:translateY(-13px) rotate(-8deg) scale(1.25)}55%{opacity:1;transform:translateY(2px) rotate(2deg) scale(.96)}100%{transform:translateY(0) rotate(-1deg) scale(1)}}
+@keyframes bid-announcement{0%{opacity:0;scale:1.4}15%,65%{opacity:1;scale:1}100%{opacity:0;translate:0 -18px;scale:.8}}
+@media(orientation:landscape) and (min-width:600px){
+ .table-screen .contract-board{top:clamp(15px,4dvh,42px);left:23%;right:23%}
+ .table-screen .table-centre{position:absolute;inset:78px 19% 22px;max-width:none;display:grid;place-items:center;align-self:auto;width:auto}
+ .table-screen .trick-cards{width:100%;height:clamp(64px,19dvh,145px);margin:0}
+ .table-screen .trick-play{width:clamp(30px,4.5vw,66px)}
+ .table-screen .trick-play.seat-2{top:-8%;left:calc(50% - 17px)}
+ .table-screen .trick-play.seat-0{top:43%;left:calc(50% - 17px)}
+ .table-screen .trick-play.seat-1{top:15%;left:calc(50% + 29px)}
+ .table-screen .trick-play.seat-3{top:15%;left:calc(50% - 65px)}
+ .table-screen .score-meter .points-value,.table-screen .score-meter .mult-value{font-size:1.22rem;gap:3px}
+ .table-screen .score-meter>strong{font-size:1.8rem}
+ .table-screen .action-panel{justify-content:center;gap:5px}
+ .table-screen .action-panel:has(.joker-call),.table-screen .action-panel:has(.rule-toggle){gap:3px}
+ .table-screen .action-panel:has(.joker-call) .play-hint,.table-screen .action-panel:has(.rule-toggle) .play-hint{display:none}
+ .table-screen .action-panel:has(.rule-toggle) .card-explain{font-size:.61rem}
+ .table-screen .winner-caption{color:#f4d996;font-size:1rem}
+ .table-screen .mug{right:13%;bottom:24px}
+ .table-screen .full-hand .card-corner{font-size:1.5rem}
+ .table-screen .full-hand .playing-card .stamp{top:49%}
+}
+@media(orientation:landscape) and (min-height:600px){
+ .table-screen .contract-board{left:27%;right:27%;top:47px;gap:9px}
+ .contract-ticket,.trick-pile{height:70px;padding:6px;min-height:70px}
+ .contract-ticket small,.trick-pile small{font-size:.75rem}
+ .contract-ticket strong{font-size:2rem}.trick-total{font-size:1.8rem}.pile-content{gap:13px;margin-top:10px}
+ .board-turn{font-size:.85rem}.stack-cards{scale:1.2}
+ .table-screen .table-centre{top:140px;bottom:100px}
+ .table-screen .trick-play.seat-2,.table-screen .trick-play.seat-0{left:calc(50% - 30px)}
+ .table-screen .trick-play.seat-3{left:calc(50% - 100px)}.table-screen .trick-play.seat-1{left:calc(50% + 42px)}
+ .table-screen .next-bid{min-height:62px;font-size:1.7rem}.next-bid span{font-size:1.4rem}
+}
+@media(orientation:portrait){
+ .table-screen .table{clip-path:none;border-radius:35%;overflow:visible}
+ .table-screen .table::before,.table-screen .table::after{border-radius:35%;clip-path:none}
+ .contract-board{left:17%;right:17%;top:8px;gap:3px}
+ .contract-ticket,.trick-pile{height:39px;min-height:39px;padding:2px}.contract-ticket strong{font-size:1.1rem}.trick-total{font-size:1rem}.stack-cards{scale:.8}
+ .board-turn{font-size:.57rem}.table-screen .table-centre{padding-top:72px}
+ .next-bid{min-height:42px}.table-screen .action-panel:has(.rule-toggle) .play-hint{display:none}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.bid-announcement,.winning-card::after{display:none}}
+@media(orientation:landscape) and (min-width:600px){
+ .table-screen .full-hand{--card-width:clamp(56px,8.5vw,112px);width:100%;max-width:min(850px,calc(var(--cards)*var(--card-width)*.77 + var(--card-width)*.4))}
+}
+@media(orientation:landscape) and (min-width:600px) and (max-height:390px){.table-screen .full-hand{--card-width:clamp(55px,8.2vw,72px)}}

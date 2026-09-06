@@ -1,8 +1,8 @@
 # The Last Social Club
 
-Game design document · v0.2 · 6 September 2026
+Game design document · v0.4 · 6 September 2026
 
-**Status:** visual direction approved; First Sitting v0.1 playable slice implemented. See `PLAYTEST.md` for the exact shipped subset and provisional-rule choices, and `BALANCE-BASELINE.md` for the initial heuristic simulation. This document still describes broader intended scope: numerical values remain experiments, not validated balance.
+**Status:** visual direction approved; First Sitting v0.4 playable slice implemented. See `PLAYTEST.md` for the exact shipped subset and provisional-rule choices, and `BALANCE-BASELINE.md` for the initial heuristic simulation. This document still describes broader intended scope: numerical values remain experiments, not validated balance.
 
 ## 1. The game in one paragraph
 
@@ -75,21 +75,21 @@ Our adaptation needs its own versioned ruleset. Reference for variation review: 
 - Four seats, opposing seats form partnerships. Player controls North/South. East/West are rivals.
 - Proposed 43-card pack: a standard deck minus all twos and threes and the black fours, plus one joker. Each card has one permanent physical identity.
 - Ten cards per seat, three-card kitty, clockwise turns. First bidder is left of dealer; dealer rotates each deal.
-- Suited bids six through ten, ordered by contract value with suits spades, clubs, diamonds, hearts. A bid must exceed the current bid. A passed seat cannot re-enter this auction.
+- Suited and no-trump bids six through ten, ordered spades, clubs, diamonds, hearts, NT. A bid must exceed the current bid. A passed seat cannot re-enter this auction.
 - Three consecutive passes after a bid end the auction. All-pass triggers one forced dealer six-spades contract in the slice, announced in the rules. Prototype this unpopular but deterministic fallback against an all-pass no-trump defensive hand before MVP lock; no free repeated redeals.
 - Declarer picks up and discards alone and leads the first trick. Subsequent trick winner leads.
 - Follow effective suit when possible. The left bower belongs to trump, not its printed suit. Trump order: joker, right bower, left bower, ace, king, queen, remaining ranks descending.
 - All discarded cards stay out for this deal; their enhancements remain next deal. No free transfer between partners.
-- Suited contracts ship first. No-trump is an MVP candidate after explicitly specifying joker lead/follow rules. Misère/open misère are a later milestone unless they displace another feature; do not advertise an avoidance build before its contract is playable.
+- No-trump ships in v0.4: normal jacks, joker highest, play joker only when void in the led suit; leading joker names any suit (free-call variant). Misère/open misère are a later milestone unless they displace another feature; do not advertise an avoidance build before its contract is playable.
 - Point scoring differs from traditional match-to-500 scoring. Legal bid precedence is distinct from roguelike payout; multipliers cannot change which bid outranks another.
 
-Open rules gate before engine implementation: confirm the exact pack and all-pass rule, and set no-trump/misère release scope. Record ruleset version in every save and replay.
+Pack and all-pass rules are implemented; misère remains out of scope. Additive v0.4 rules preserve existing suited action logs under `club-suited-1`; a v0.3 replay fixture guards compatibility.
 
 ## 6. Bidding, score, money and survival
 
 Three resources have separate jobs: **Score** clears a room, **Cash** purchases upgrades, **Composure** keeps the night going. Insight is a track, not a spendable wallet.
 
-Initial scoring experiment for suited contracts, using `n` = bid tricks and `s` = suit index 0–3:
+Current scoring experiment, using `n` = bid tricks and `s` = contract index 0–4 (NT last):
 
 | Quantity | Draft formula |
 | --- | --- |
@@ -129,7 +129,7 @@ Eight-Regular slice roster, numbers provisional:
 | bookkeeper / The Bookkeeper | ×2 at settlement for making your own contract exactly | Precision / deal |
 | wallflower / The Wallflower | +1 Mult when your winning play was the lowest-strength legal card at play time | Cheap winners / up to 3 per deal |
 | switchboard / The Switchboard Operator | +1 Mult when the player's partnership wins consecutive tricks with alternating seats | Partnership / cap 4 per deal; rival win breaks chain |
-| gatekeeper / The Gatekeeper | +20 points per defensive trick at or beyond the trick that sets the contract | Defence / deal |
+| gatekeeper / The Gatekeeper | Once/deal, optionally ignore follow-suit; +20 points per defensive trick at or beyond the setting trick | Defence / deal |
 | underwriter / The Underwriter | Successful player bids of eight or more earn +2 Mult | Bold contracts / once per deal |
 | scavenger / The Scavenger | +15 points for each enhanced opposing card captured | Capture / per physical card per deal |
 | groundskeeper / The Groundskeeper | +1 Mult when a non-trump card wins a trick containing no trump cards | Side-suit control / cap 3 per deal |
@@ -352,3 +352,15 @@ The game should be identifiable from an ordinary decision: **I could make seven,
 
 ## Copy direction — September 2026
 Keep storytelling subtle and text minimal. Use short, direct labels and one-line prompts. Show costs and effects at the choice; put secondary rules in optional help. Avoid repeated instructions, narrated actions and prototype/development notes in the main flow. Let portraits and the room carry the atmosphere.
+
+## v0.4 deck direction — decision pending
+
+| Model | Gains | Costs |
+| --- | --- | --- |
+| Shared 43-card deck | Card counting, finite aces/bowers, denial and capture matter; feels like 500 | Improvements can reach rivals; builds are less dependable |
+| Four personal decks | Clear ownership, dependable upgrades, strong asymmetric identities | Duplicate top cards, new tie/kitty/exhaustion rules, harder counting and balance; four decks to manage |
+| Partnership deck + rival deck | Build one coherent North/South strategy; less management than four decks | Still changes scarcity, information and original dealing rules |
+
+Recommended next experiment: retain the shared pack and test a small guaranteed partnership reserve or one post-deal suit edit. This would make a build dependable without duplicating the entire pack. Current Favour remains probabilistic; neither experiment is implemented yet.
+
+Shipped rule interaction: four suit inks replace the suit of one non-joker card (and can create/move a bower). Equal rank/suit strengths tie in favour of the first played. Gatekeeper can explicitly break the follow-suit obligation once per deal. Both effects are public when used.

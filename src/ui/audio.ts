@@ -1,4 +1,4 @@
-export type Cue='deal'|'select'|'play'|'bid'|'score'|'mult'|'room'|'buy';
+export type Cue='deal'|'select'|'play'|'bid'|'score'|'mult'|'room'|'buy'|'win'|'sweep';
 let context:AudioContext|null=null;
 let enabled=true;
 let lastCue=0;
@@ -21,7 +21,9 @@ export function playSound(cue:Cue){
  };
  if(cue==='select')tone(650,now,.05,.025,'triangle',350);
  if(cue==='play')tone(180,now,.08,.06,'triangle',65);
- if(cue==='bid'){tone(260,now,.11,.06);tone(390,now+.05,.1,.03);}
+ if(cue==='bid'){tone(95,now,.13,.085,'triangle',45);tone(390,now+.04,.18,.04);tone(585,now+.08,.15,.025);}
+ if(cue==='win'){tone(220,now,.1,.05,'triangle',110);tone(660,now+.05,.17,.04);tone(990,now+.13,.22,.03);}
+ if(cue==='sweep'){tone(850,now,.2,.025,'triangle',110);tone(100,now+.58,.09,.065,'triangle',45);}
  if(cue==='deal')for(let i=0;i<5;i++)tone(1300-i*140,now+i*.035,.045,.018,'triangle',350);
  if(cue==='score'){tone(490,now,.12,.045);tone(735,now+.06,.16,.04);}
  if(cue==='mult'){tone(440,now,.15,.04);tone(660,now+.07,.16,.04);tone(880,now+.14,.2,.03);}

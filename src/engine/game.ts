@@ -1,17 +1,19 @@
-import { REGULARS, regular, type RegularId, type Modifier } from '../content/regulars.ts';
+import { REGULARS, MODIFIERS, regular, type RegularId, type Modifier } from '../content/regulars.ts';
 export const RULESET = 'club-suited-1';
 export const SUITS = ['S','C','D','H'] as const;
 export type Suit = typeof SUITS[number];
+export const CONTRACTS = [...SUITS,'NT'] as const;
+export type ContractSuit = typeof CONTRACTS[number];
 export type Seat = 0|1|2|3;
 export type Card = {id:string;suit:Suit|'J';rank:number;mod?:Modifier};
-export type Bid = {seat:Seat;tricks:number;suit:Suit};
-export type Play = {seat:Seat;card:Card;lowest:boolean};
+export type Bid = {seat:Seat;tricks:number;suit:ContractSuit};
+export type Play = {seat:Seat;card:Card;lowest:boolean;leadSuit?:Suit;ruleBreak?:boolean};
 export type Trick = {plays:Play[];winner:Seat};
 export type Entry = {label:string;points?:number;mult?:number;factor?:number};
 export type Phase = 'arrival'|'auction'|'kitty'|'insight'|'play'|'trick'|'settlement'|'pub'|'over';
 export type Action =
- | {type:'start';regular:RegularId} | {type:'bid';tricks:number;suit:Suit} | {type:'pass'}
- | {type:'discard';ids:string[]} | {type:'insight';accept:boolean} | {type:'play';id:string}
+ | {type:'start';regular:RegularId} | {type:'bid';tricks:number;suit:ContractSuit} | {type:'pass'}
+ | {type:'discard';ids:string[]} | {type:'insight';accept:boolean} | {type:'play';id:string;leadSuit?:Suit;breakSuit?:boolean}
  | {type:'collect'} | {type:'settle'} | {type:'pub'} | {type:'buy';id:RegularId}
  | {type:'enhance';id:string;mod:Modifier} | {type:'favour';id:string|null}
  | {type:'event';choice:'rest'|'ask'|'leave'} | {type:'next'};
@@ -23,14 +25,16 @@ export type State = {
  counters:Record<string,number>;lastWinner:Seat|null;penalty:number;dealScore:number;made:boolean;
  eventDone:boolean;enhanced:boolean;offer:RegularId[];actions:Action[];message:string;
 };
-export const symbol = (s:Card['suit']) => ({S:'♠',C:'♣',D:'♦',H:'♥',J:'★'})[s];
+export const symbol = (s:Card['suit']|ContractSuit) => ({S:'♠',C:'♣',D:'♦',H:'♥',J:'★',NT:'NT'})[s];
 export const rankName = (c:Card) => c.suit==='J'?'JK':({11:'J',12:'Q',13:'K',14:'A'}[c.rank]??String(c.rank));
-export const cardName = (c:Card) => `${rankName(c)}${c.suit==='J'?'':symbol(c.suit)}`;
+export const cardSuit = (c:Card):Card['suit'] => c.suit==='J'?'J':({inkS:'S',inkC:'C',inkD:'D',inkH:'H'} as Partial<Record<Modifier,Suit>>)[c.mod!]??c.suit;
+export const cardName = (c:Card) => `${rankName(c)}${c.suit==='J'?'':symbol(cardSuit(c))}`;
 export const side = (seat:number) => seat%2;
 export const isPlayer = (seat:number) => side(seat)===0;
 export const seatName = (seat:number) => ['South','Arthur','North','Mabel'][seat];
 export const nextSeat = (seat:number):Seat => ((seat+1)%4) as Seat;
-export const bidValue = (b:Pick<Bid,'tricks'|'suit'>) => (b.tricks-6)*100+SUITS.indexOf(b.suit)*20+40;
+export const bidValue = (b:Pick<Bid,'tricks'|'suit'>) => (b.tricks-6)*100+CONTRACTS.indexOf(b.suit)*20+40;
+export function nextBid(suit:ContractSuit,current:Bid|null):Pick<Bid,'tricks'|'suit'>|null {for(let tricks=6;tricks<=10;tricks++){const bid={tricks,suit};if(!current||bidValue(bid)>bidValue(current))return bid;}return null;}
 export const failCost = (s:State,b:Bid) => 2+2*(b.tricks-6)+(s.insight>=3?2:0);
 export function rng(seed:number) {let a=seed>>>0;return ()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
 export function shuffle<T>(items:T[],random:()=>number) {const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -40,18 +44,25 @@ export function createDeck():Card[] {
  for(const [id,mod] of [['H9','gilt'],['C8','stamped'],['D7','threaded'],['S6','veiled']] as const)cards.find(c=>c.id===id)!.mod=mod;
  return cards;
 }
-export function effective(c:Card,trump:Suit):Suit {if(c.suit==='J'||c.rank===11&&c.suit!==trump&&colour(c.suit)===colour(trump))return trump;return c.suit as Suit;}
+export function effective(c:Card,trump:ContractSuit):Card['suit'] {
+ const suit=cardSuit(c);
+ if(trump!=='NT'&&(suit==='J'||c.rank===11&&suit!==trump&&colour(suit)===colour(trump)))return trump;
+ return suit;
+}
 function colour(s:Card['suit']) {return s==='H'||s==='D'?'red':'black';}
-export function strength(c:Card,trump:Suit,lead?:Suit) {
- if(c.suit==='J')return 200;if(effective(c,trump)===trump){if(c.rank===11)return c.suit===trump?199:198;return 100+c.rank;}
+export function strength(c:Card,trump:ContractSuit,lead?:Card['suit']) {
+ if(c.suit==='J')return 200;
+ if(trump!=='NT'&&effective(c,trump)===trump){if(c.rank===11)return cardSuit(c)===trump?199:198;return 100+c.rank;}
  return (lead===undefined||effective(c,trump)===lead?20:0)+c.rank;
 }
-export function legalCards(hand:Card[],plays:Play[],trump:Suit) {if(!plays.length)return hand;const lead=effective(plays[0].card,trump);const follow=hand.filter(c=>effective(c,trump)===lead);return follow.length?follow:hand;}
-export function trickWinner(plays:Play[],trump:Suit):Seat {
- if(!plays.length)throw new Error('Empty trick');const lead=effective(plays[0].card,trump);let best=plays[0];
+export function ledSuit(plays:Play[],trump:ContractSuit):Card['suit']|undefined {return plays.length?plays[0].leadSuit??effective(plays[0].card,trump):undefined;}
+export function legalCards(hand:Card[],plays:Play[],trump:ContractSuit) {if(!plays.length)return hand;const lead=ledSuit(plays,trump);const follow=hand.filter(c=>effective(c,trump)===lead);return follow.length?follow:hand;}
+export function canBreakSuit(s:State){return s.phase==='play'&&isPlayer(s.turn)&&s.regulars.includes('gatekeeper')&&!s.counters.gatePass&&s.plays.length>0&&legalCards(s.hands[s.turn],s.plays,s.bid!.suit).length<s.hands[s.turn].length;}
+export function trickWinner(plays:Play[],trump:ContractSuit):Seat {
+ if(!plays.length)throw new Error('Empty trick');const lead=ledSuit(plays,trump);let best=plays[0];
  for(const p of plays.slice(1))if(strength(p.card,trump,lead)>strength(best.card,trump,lead))best=p;return best.seat;
 }
-export function sortHand(hand:Card[],trump:Suit='H') {return [...hand].sort((a,b)=>{const sa=effective(a,trump),sb=effective(b,trump);return (sa===trump?4:SUITS.indexOf(sa))-(sb===trump?4:SUITS.indexOf(sb))||strength(b,trump)-strength(a,trump);});}
+export function sortHand(hand:Card[],trump:ContractSuit='H') {const order=(s:Card['suit'])=>s==='J'?5:s===trump?4:SUITS.indexOf(s);return [...hand].sort((a,b)=>order(effective(a,trump))-order(effective(b,trump))||strength(b,trump)-strength(a,trump));}
 export function fresh(seed:number,night=1):State {return {version:RULESET,seed:seed>>>0,night,phase:'arrival',deal:0,dealer:3,turn:0,deck:createDeck(),hands:[[],[],[],[]],kitty:[],discarded:[],passed:[false,false,false,false],bid:null,auction:[],plays:[],history:[],tricks:[0,0],ledger:[],points:0,mult:1,score:0,cash:6,composure:20,insight:0,regulars:[],favour:null,counters:{},lastWinner:null,penalty:0,dealScore:0,made:false,eventDone:false,enhanced:false,offer:[],actions:[],message:''};}
 // Uniformly choose among all eligible kitty triples: exact bounded sampling.
 export function dealCards(deck:Card[],random:()=>number,favour:string|null) {
@@ -111,7 +122,7 @@ export function reduce(state:State,action:Action):State {
  const s:State=structuredClone(state);const bad=()=>{throw new Error(`Unavailable action: ${action.type} in ${s.phase}`);};
  switch(action.type){
  case 'start':if(s.phase!=='arrival'||!REGULARS.some(r=>r.id===action.regular))return bad();s.regulars=[action.regular];startDeal(s);break;
- case 'bid':if(s.phase!=='auction'||!SUITS.includes(action.suit)||!Number.isInteger(action.tricks)||action.tricks<6||action.tricks>10||s.passed[s.turn]||(s.bid&&bidValue(action)<=bidValue(s.bid)))return bad();s.bid={seat:s.turn,tricks:action.tricks,suit:action.suit};s.auction.push(`${seatName(s.turn)} bids ${action.tricks}${symbol(action.suit)}`);advanceAuction(s);break;
+ case 'bid':if(s.phase!=='auction'||!CONTRACTS.includes(action.suit)||!Number.isInteger(action.tricks)||action.tricks<6||action.tricks>10||s.passed[s.turn]||(s.bid&&bidValue(action)<=bidValue(s.bid)))return bad();s.bid={seat:s.turn,tricks:action.tricks,suit:action.suit};s.auction.push(`${seatName(s.turn)} bids ${action.tricks}${symbol(action.suit)}`);advanceAuction(s);break;
  case 'pass':if(s.phase!=='auction'||s.passed[s.turn])return bad();s.passed[s.turn]=true;s.auction.push(`${seatName(s.turn)} passes`);advanceAuction(s);break;
  case 'discard':{
  if(s.phase!=='kitty'||action.ids.length!==3||new Set(action.ids).size!==3||!action.ids.every(id=>s.hands[s.turn].some(c=>c.id===id)))return bad();
@@ -119,15 +130,23 @@ export function reduce(state:State,action:Action):State {
  s.phase=isPlayer(s.turn)&&s.hands[s.turn].some(c=>c.mod==='veiled')?'insight':'play';break;}
  case 'insight':if(s.phase!=='insight')return bad();if(action.accept)s.insight=Math.min(3,s.insight+1);s.phase='play';break;
  case 'play':{
- if(s.phase!=='play'||!s.bid)return bad();const legal=legalCards(s.hands[s.turn],s.plays,s.bid.suit),card=legal.find(c=>c.id===action.id);if(!card)return bad();
- const lead=s.plays.length?effective(s.plays[0].card,s.bid.suit):undefined;
- s.plays.push({seat:s.turn,card,lowest:strength(card,s.bid.suit,lead)===Math.min(...legal.map(c=>strength(c,s.bid!.suit,lead)))});
+ if(s.phase!=='play'||!s.bid)return bad();
+ const normal=legalCards(s.hands[s.turn],s.plays,s.bid.suit);
+ if(action.breakSuit&&!canBreakSuit(s))return bad();
+ const legal=action.breakSuit?s.hands[s.turn]:normal,card=legal.find(c=>c.id===action.id);if(!card)return bad();
+ const jokerLead=s.bid.suit==='NT'&&card.suit==='J'&&!s.plays.length;
+ if(jokerLead&&(!action.leadSuit||!SUITS.includes(action.leadSuit)))return bad();
+ if(action.leadSuit&&!jokerLead)return bad();
+ const ruleBreak=!!action.breakSuit&&!normal.some(c=>c.id===card.id);
+ if(ruleBreak)s.counters.gatePass=1;
+ const lead=ledSuit(s.plays,s.bid.suit);
+ s.plays.push({seat:s.turn,card,lowest:strength(card,s.bid.suit,lead)===Math.min(...legal.map(c=>strength(c,s.bid!.suit,lead))),...(jokerLead?{leadSuit:action.leadSuit}:{}),...(ruleBreak?{ruleBreak:true}:{})});
  s.hands[s.turn]=s.hands[s.turn].filter(c=>c.id!==card.id);s.turn=nextSeat(s.turn);if(s.plays.length===4)s.phase='trick';break;}
  case 'collect':if(s.phase!=='trick')return bad();collect(s);break;
  case 'settle':if(s.phase!=='settlement'||s.counters.settled)return bad();settle(s);break;
  case 'pub':if(s.phase!=='settlement'||!s.counters.settled)return bad();s.phase=s.deal>=3||s.composure<=0?'over':'pub';s.offer=shuffle(REGULARS.filter(r=>!s.regulars.includes(r.id)).map(r=>r.id),rng(s.seed+s.deal*601)).slice(0,3);break;
  case 'buy':{const r=regular(action.id);if(s.phase!=='pub'||!r||!s.offer.includes(action.id)||s.cash<r.price||s.regulars.length>=5||s.regulars.includes(action.id))return bad();s.cash-=r.price;s.regulars.push(action.id);s.offer=s.offer.filter(id=>id!==action.id);break;}
- case 'enhance':{const c=s.deck.find(c=>c.id===action.id);if(s.phase!=='pub'||s.cash<3||s.enhanced||!c||!['gilt','stamped','threaded','veiled'].includes(action.mod))return bad();c.mod=action.mod;s.cash-=3;s.enhanced=true;break;}
+ case 'enhance':{const c=s.deck.find(c=>c.id===action.id);if(s.phase!=='pub'||s.cash<3||s.enhanced||!c||!Object.hasOwn(MODIFIERS,action.mod)||c.suit==='J'&&action.mod.startsWith('ink'))return bad();c.mod=action.mod;s.cash-=3;s.enhanced=true;break;}
  case 'favour':if(s.phase!=='pub'||action.id!==null&&!s.deck.some(c=>c.id===action.id))return bad();s.favour=action.id;break;
  case 'event':if(s.phase!=='pub'||s.eventDone||!['rest','ask','leave'].includes(action.choice))return bad();s.eventDone=true;if(action.choice==='rest')s.composure=Math.min(20,s.composure+3);if(action.choice==='ask')s.insight=Math.min(3,s.insight+2);break;
  case 'next':if(s.phase!=='pub'||!s.eventDone)return bad();startDeal(s);break;
@@ -142,16 +161,16 @@ export function observation(s:State) {return {hand:s.hands[s.turn],plays:s.plays
 export function aiAction(o:ReturnType<typeof observation>):Action {
  if(o.phase==='auction'){
  const options:Bid[]=[];
- for(const suit of SUITS){const trumps=o.hand.filter(c=>effective(c,suit)===suit);const power=trumps.reduce((v,c)=>v+(strength(c,suit)>=198?1.0:c.rank>=13?0.85:c.rank>=10?0.5:0.28),0);const aces=o.hand.filter(c=>effective(c,suit)!==suit&&c.rank===14).length;
- const expected=2.4+power+aces*0.7+(trumps.length>=5?0.6:0)+(o.trait==='bold'?0.5:-0.25);
+ for(const suit of CONTRACTS){const trumps=o.hand.filter(c=>effective(c,suit)===suit);const power=trumps.reduce((v,c)=>v+(strength(c,suit)>=198?1.0:c.rank>=13?0.85:c.rank>=10?0.5:0.28),0);const aces=o.hand.filter(c=>effective(c,suit)!==suit&&c.rank===14).length;
+ const expected=suit==='NT'?2.4+o.hand.reduce((n,c)=>n+(c.suit==='J'?1.7:c.rank===14?1:c.rank===13?.45:0),0)+(o.trait==='bold'?.5:-.25):2.4+power+aces*0.7+(trumps.length>=5?0.6:0)+(o.trait==='bold'?0.5:-0.25);
  for(let tricks=6;tricks<=Math.min(10,Math.floor(expected));tricks++){const b={seat:o.seat,tricks,suit};if(!o.bid||bidValue(b)>bidValue(o.bid))options.push(b);}}
  if(!options.length)return {type:'pass'};options.sort((a,b)=>bidValue(a)-bidValue(b));const b=options[0];return {type:'bid',tricks:b.tricks,suit:b.suit};
  }
  if(o.phase==='kitty'){const trump=o.bid!.suit;const sorted=[...o.hand].sort((a,b)=>strength(a,trump)-strength(b,trump));return {type:'discard',ids:sorted.slice(0,3).map(c=>c.id)};}
  if(o.phase==='play'){
- const trump=o.bid!.suit,legal=legalCards(o.hand,o.plays,trump),lead=o.plays.length?effective(o.plays[0].card,trump):undefined;
+ const trump=o.bid!.suit,legal=legalCards(o.hand,o.plays,trump),lead=ledSuit(o.plays,trump);
  const ordered=[...legal].sort((a,b)=>strength(a,trump,lead)-strength(b,trump,lead));
- if(!o.plays.length){const high=ordered.at(-1)!;return {type:'play',id:(strength(high,trump)>=198?high:ordered.find(c=>c.rank===14)??ordered[0]).id};}
+ if(!o.plays.length){const high=ordered.at(-1)!,card=strength(high,trump)>=198?high:ordered.find(c=>c.rank===14)??ordered[0];return {type:'play',id:card.id,...(trump==='NT'&&card.suit==='J'?{leadSuit:SUITS.reduce((best,suit)=>o.hand.filter(c=>cardSuit(c)===suit).length>o.hand.filter(c=>cardSuit(c)===best).length?suit:best,'S' as Suit)}:{})};}
  const current=trickWinner(o.plays,trump);if(side(current)===side(o.seat))return {type:'play',id:ordered[0].id};
  const winner=o.plays.find(p=>p.seat===current)!.card;return {type:'play',id:(ordered.find(c=>strength(c,trump,lead)>strength(winner,trump,lead))??ordered[0]).id};
  }
