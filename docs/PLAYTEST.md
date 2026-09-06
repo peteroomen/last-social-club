@@ -43,4 +43,6 @@ This first slice includes the eight Regular effects but only a small story beat.
 - Production TypeScript/Vite build passes.
 - Focused tests cover card conservation, enhanced kitty, bowers, legal plays, auction closure, scoring, settlement idempotence, shops, save validation and information-limited AI.
 - 100 simulated full nights finish and replay exactly. These are correctness checks using simple heuristic players, not proof of balance or fun.
-- Cloud browser preview was unavailable (`ERR_BLOCKED_BY_CLIENT`); phone visual and interaction verification remains unconfirmed. The first user playtest should prioritise layout, card selection, turn changes and scrolling.
+- The local cloud preview was blocked, but the published Vercel game was accessible. Browser checks covered starter selection, bidding from both seats, declarer-only kitty/discards, a complete ten-trick deal, legal-card controls, settlement, mid-trick and post-settlement reload, a shop purchase, the courtyard Insight choice and entry to deal two. No application console errors appeared; browser-extension messages were unrelated.
+- The published narrow portrait layout was visually inspected. A physical phone and a true 390-pixel browser viewport have not yet been checked; the first user playtest should prioritise card sizes, turn changes and scrolling.
+- A separate 1,000-night heuristic baseline is recorded in `BALANCE-BASELINE.md`. It indicates forgiving survival and does not establish attack/defence parity.

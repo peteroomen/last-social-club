@@ -2,7 +2,7 @@
 
 Game design document · v0.2 · 6 September 2026
 
-**Status:** visual direction approved; gameplay remains in preproduction. This document distinguishes accepted direction from proposals to prototype. Numerical values are experiment settings, not validated balance. No playable build or simulation results are claimed.
+**Status:** visual direction approved; First Sitting v0.1 playable slice implemented. See `PLAYTEST.md` for the exact shipped subset and provisional-rule choices, and `BALANCE-BASELINE.md` for the initial heuristic simulation. This document still describes broader intended scope: numerical values remain experiments, not validated balance.
 
 ## 1. The game in one paragraph
 
@@ -301,7 +301,7 @@ Use a pure transition boundary such as `reduce(state, action) -> {state, events}
 
 Persist schema version, ruleset version, content version, seed/PRNG states, action index, run state and separate campaign state. A reload cannot reroll a deal, repeat a reward or duplicate a conversation unlock. Use IndexedDB transactions for local saves, with export/import and explicit recovery if storage is unavailable. Do not promise cross-device saves in MVP.
 
-GitHub setup status: the user created `peteroomen/last-social-club`; access and the empty repository were verified, and a local checkout exists. The repository was created public; its visibility has not been changed. No gameplay code or Vercel deployment has been created in this project flow.
+GitHub setup status: First Sitting source and artwork are saved to `peteroomen/last-social-club`. The repository was created public; its visibility has not been changed. The first static Vercel build is published at https://last-social-club.vercel.app . GitHub automatic deployment integration is not configured yet; deployments in this flow use the connected Vercel tool.
 
 ## 15. Balance model and verification specification
 
