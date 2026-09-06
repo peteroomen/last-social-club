@@ -18,6 +18,6 @@ export const MODIFIERS = {
   gilt:{name:'Gilt',mark:'✦',effect:'Capture: +15 points.'},
   stamped:{name:'Stamped',mark:'M',effect:'Win with this card: +1 Mult.'},
   threaded:{name:'Threaded',mark:'↔',effect:'Partner wins this trick: +15 points.'},
-  veiled:{name:'Veiled',mark:'?',effect:'Keep from kitty: optional +1 Insight. Capture at Insight 3: +15 points.'},
+  veiled:{name:'Veiled',mark:'?',effect:'Keep after discard: optional +1 Insight. Capture at Insight 3: +15 points.'},
 } as const;
 export type Modifier = keyof typeof MODIFIERS;

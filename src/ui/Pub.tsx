@@ -1,8 +1,8 @@
 import {useState} from 'react';
 import {playSound} from './audio.ts';
 type Area='lounge'|'bar'|'courtyard';
-type Props={arrival:boolean;deal:number;eventDone:boolean;onStart:()=>void;onRecruit:()=>void;onDeck:()=>void;onMabel:()=>void;onNext:()=>void;};
-export function Pub({arrival,deal,eventDone,onStart,onRecruit,onDeck,onMabel,onNext}:Props){
+type Props={arrival:boolean;challenge?:boolean;deal:number;eventDone:boolean;onStart:()=>void;onRecruit:()=>void;onDeck:()=>void;onMabel:()=>void;onNext:()=>void;};
+export function Pub({arrival,challenge,deal,eventDone,onStart,onRecruit,onDeck,onMabel,onNext}:Props){
  const [area,setArea]=useState<Area>('lounge');
  const move=(next:Area)=>{playSound('room');setArea(next);};
  return <section className={`pub-space room-${area}`} aria-label={area==='lounge'?'Card room':area==='bar'?'Bar':'Courtyard'}>
@@ -16,7 +16,7 @@ export function Pub({arrival,deal,eventDone,onStart,onRecruit,onDeck,onMabel,onN
   {area==='bar'&&<>
    <button className="hotspot bar-lounge" onClick={()=>move('lounge')}>← Card room</button>
    <button className="hotspot bar-courtyard" onClick={()=>move('courtyard')}>Courtyard →</button>
-   <button className="hotspot bar-counter" onClick={arrival?onStart:onDeck}>{arrival?'Choose a Regular':'Improve a card'}</button>
+   <button className="hotspot bar-counter" onClick={arrival?onStart:onDeck}>{arrival?'Choose a Regular':challenge?'Enhancement tools':'Improve a card'}</button>
    {!arrival&&<button className="hotspot bar-regulars" onClick={onRecruit}>Recruit</button>}
   </>}
   {area==='courtyard'&&<>

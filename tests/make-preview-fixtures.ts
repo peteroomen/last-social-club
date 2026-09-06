@@ -10,7 +10,7 @@ for(let seed=0;seed<80;seed++){
  while(s.phase!=='settlement'){
   if(s.phase==='kitty'){
    const sorted=s.hands[s.turn].filter(c=>c.suit!=='J').sort((a,b)=>a.rank-b.rank);s=reduce(s,{type:'discard',ids:sorted.slice(0,3).map(c=>c.id)});
-  }else if(s.phase==='insight')s=reduce(s,{type:'insight',accept:false});
+  }else if(s.phase==='insight'){keep('insight',s);s=reduce(s,{type:'insight',accept:false});}
   else if(s.phase==='trick')s=reduce(s,{type:'collect'});
   else{
    if(isPlayer(s.turn)&&!s.plays.length&&s.hands[s.turn].some(c=>c.suit==='J'))keep('joker',s);
@@ -25,6 +25,19 @@ for(let seed=0;seed<80;seed++){
   if(s.hands[0].concat(s.hands[2]).some(c=>c.id==='D11'))keep('inked-hand',s);
  }
  if(Object.keys(fixtures).length===6)break;
+}
+for(let seed=0;seed<50;seed++){
+ let s=reduce(fresh(seed),{type:'start',regular:'wallflower',challenge:true});keep('prepare',s);
+ s=reduce(s,{type:'ready'});while(s.phase==='auction')s=reduce(s,isPlayer(s.turn)&&!s.bid?{type:'bid',tricks:10,suit:'NT'}:{type:'pass'});
+ if(isPlayer(s.turn))keep('thirteen',s);
+ while(s.phase!=='settlement'){
+ if(s.phase==='kitty')s=reduce(s,aiAction(observation(s)));
+ else if(s.phase==='insight')s=reduce(s,{type:'insight',accept:true});
+ else if(s.phase==='trick')s=reduce(s,{type:'collect'});
+ else{if(isPlayer(s.turn)&&s.plays.length===3)keep('challenge-trick',s);s=reduce(s,aiAction(observation(s)));}
+ }
+ s=reduce(s,{type:'settle'});s=reduce(s,{type:'pub'});if(s.phase==='pub')keep('tool-shop',s);
+ if(fixtures['prepare']&&fixtures['thirteen']&&fixtures['challenge-trick']&&fixtures['tool-shop'])break;
 }
 writeFileSync('tests/fixtures/preview.json',JSON.stringify(fixtures));
 console.log(Object.keys(fixtures));

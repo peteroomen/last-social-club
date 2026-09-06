@@ -1,0 +1,48 @@
+{
+  "note": "Diagnostic heuristic play, not human balance proof. Same opponents and three deals at every sitting.",
+  "targets": [
+    500,
+    1000,
+    1800
+  ],
+  "results": [
+    {
+      "policy": "no-tools",
+      "runs": 300,
+      "reached": [
+        300,
+        223,
+        73
+      ],
+      "passed": [
+        223,
+        73,
+        3
+      ],
+      "median": [
+        810,
+        840,
+        865
+      ]
+    },
+    {
+      "policy": "tools-and-recruits",
+      "runs": 300,
+      "reached": [
+        300,
+        277,
+        254
+      ],
+      "passed": [
+        277,
+        254,
+        210
+      ],
+      "median": [
+        1755,
+        2875,
+        3340
+      ]
+    }
+  ]
+}

@@ -10,12 +10,13 @@ export type Bid = {seat:Seat;tricks:number;suit:ContractSuit};
 export type Play = {seat:Seat;card:Card;lowest:boolean;leadSuit?:Suit;ruleBreak?:boolean};
 export type Trick = {plays:Play[];winner:Seat};
 export type Entry = {label:string;points?:number;mult?:number;factor?:number};
-export type Phase = 'arrival'|'auction'|'kitty'|'insight'|'play'|'trick'|'settlement'|'pub'|'over';
+export type Phase = 'arrival'|'prepare'|'auction'|'kitty'|'insight'|'play'|'trick'|'settlement'|'pub'|'over';
 export type Action =
- | {type:'start';regular:RegularId} | {type:'bid';tricks:number;suit:ContractSuit} | {type:'pass'}
+ | {type:'start';regular:RegularId;challenge?:boolean} | {type:'bid';tricks:number;suit:ContractSuit} | {type:'pass'}
  | {type:'discard';ids:string[]} | {type:'insight';accept:boolean} | {type:'play';id:string;leadSuit?:Suit;breakSuit?:boolean}
  | {type:'collect'} | {type:'settle'} | {type:'pub'} | {type:'buy';id:RegularId}
  | {type:'enhance';id:string;mod:Modifier} | {type:'favour';id:string|null}
+ | {type:'place';mod:Modifier;id:string|null} | {type:'ready'} | {type:'tool';mod:Modifier}
  | {type:'event';choice:'rest'|'ask'|'leave'} | {type:'next'};
 export type State = {
  version:typeof RULESET; seed:number; night:number; phase:Phase; deal:number; dealer:Seat; turn:Seat;
@@ -23,6 +24,7 @@ export type State = {
  plays:Play[];history:Trick[];tricks:[number,number];ledger:Entry[];points:number;mult:number;
  score:number;cash:number;composure:number;insight:number;regulars:RegularId[];favour:string|null;
  counters:Record<string,number>;lastWinner:Seat|null;penalty:number;dealScore:number;made:boolean;
+ challenge?:{stage:number;target:number;banked:number;tools:Modifier[];placements:{mod:Modifier;id:string}[]};
  eventDone:boolean;enhanced:boolean;offer:RegularId[];actions:Action[];message:string;
 };
 export const symbol = (s:Card['suit']|ContractSuit) => ({S:'♠',C:'♣',D:'♦',H:'♥',J:'★',NT:'NT'})[s];
@@ -73,10 +75,20 @@ export function dealCards(deck:Card[],random:()=>number,favour:string|null) {
  const ours=shuffle(rest.slice(0,20).map(x=>x.card),random),theirs=shuffle(rest.slice(20).map(x=>x.card),random);
  return {kitty,hands:[ours.slice(0,10),theirs.slice(0,10),ours.slice(10),theirs.slice(10)]};
 }
+export const TARGETS=[500,1000,1800] as const;
+export const sittingScore=(s:State)=>s.score-(s.challenge?.banked??0);
+export const sittingDeal=(s:State)=>(s.deal-1)%3+1;
+export const challengePassed=(s:State)=>!!s.challenge&&sittingScore(s)>=s.challenge.target;
 function startDeal(s:State) {
+ if(s.challenge&&s.deal>0&&s.deal%3===0){s.challenge.stage++;s.challenge.banked=s.score;s.challenge.target=TARGETS[s.challenge.stage-1];}
  s.deal++;s.dealer=nextSeat(s.dealer);s.turn=nextSeat(s.dealer); // Deal 1 starts with Arthur; deal 2 with North.
- Object.assign(s,dealCards(s.deck,rng((s.seed+s.deal*1009)>>>0),s.favour));
- s.favour=null;s.phase='auction';s.bid=null;s.passed=[false,false,false,false];s.auction=[];s.plays=[];s.history=[];s.discarded=[];s.tricks=[0,0];s.points=0;s.mult=1;s.ledger=[];s.counters={};s.lastWinner=null;s.penalty=0;s.dealScore=0;s.eventDone=false;s.enhanced=false;s.message='';
+ if(s.challenge){
+  const pack=shuffle(s.deck,rng((s.seed+s.deal*1009)>>>0)).map(c=>({...c}));
+  // House marks are applied to this deal, never written back to the shared pack.
+  for(const c of pack){const mark=createDeck().find(x=>x.id===c.id)?.mod;if(mark)c.mod=mark;}
+  s.kitty=pack.slice(40);s.hands=[pack.slice(0,10),pack.slice(10,20),pack.slice(20,30),pack.slice(30,40)];s.challenge.placements=[];
+ }else Object.assign(s,dealCards(s.deck,rng((s.seed+s.deal*1009)>>>0),s.favour));
+ s.favour=null;s.phase='auction';s.bid=null;s.passed=[false,false,false,false];s.auction=[];s.plays=[];s.history=[];s.discarded=[];s.tricks=[0,0];s.points=0;s.mult=1;s.ledger=[];s.counters={};s.lastWinner=null;s.penalty=0;s.dealScore=0;s.eventDone=false;s.enhanced=false;s.message='';if(s.challenge)s.phase='prepare';
 }
 function finishAuction(s:State) {s.turn=s.bid!.seat;s.hands[s.turn].push(...s.kitty);s.kitty=[];s.phase='kitty';}
 function advanceAuction(s:State) {
@@ -121,7 +133,17 @@ function settle(s:State) {
 export function reduce(state:State,action:Action):State {
  const s:State=structuredClone(state);const bad=()=>{throw new Error(`Unavailable action: ${action.type} in ${s.phase}`);};
  switch(action.type){
- case 'start':if(s.phase!=='arrival'||!REGULARS.some(r=>r.id===action.regular))return bad();s.regulars=[action.regular];startDeal(s);break;
+ case 'start':if(s.phase!=='arrival'||!REGULARS.some(r=>r.id===action.regular))return bad();s.regulars=[action.regular];if(action.challenge){s.challenge={stage:1,target:TARGETS[0],banked:0,tools:['gilt','stamped','inkH'],placements:[]};s.deck=s.deck.map(({id,suit,rank})=>({id,suit,rank}));}startDeal(s);break;
+ case 'place':{
+ if(s.phase!=='prepare'||!s.challenge||!s.challenge.tools.includes(action.mod))return bad();
+ const ours=[...s.hands[0],...s.hands[2]],card=ours.find(c=>c.id===action.id);
+ if(action.id!==null&&(!card||card.suit==='J'&&action.mod.startsWith('ink')))return bad();
+ s.challenge.placements=s.challenge.placements.filter(p=>p.mod!==action.mod&&p.id!==action.id);
+ if(card)s.challenge.placements.push({mod:action.mod,id:card.id});
+ for(const c of ours){delete c.mod;const mod=s.challenge.placements.find(p=>p.id===c.id)?.mod??createDeck().find(x=>x.id===c.id)?.mod;if(mod)c.mod=mod;}
+ break;}
+ case 'ready':if(s.phase!=='prepare'||!s.challenge)return bad();s.phase='auction';break;
+ case 'tool':if(s.phase!=='pub'||!s.challenge||s.enhanced||s.cash<3||s.challenge.tools.length>=5||!Object.hasOwn(MODIFIERS,action.mod)||s.challenge.tools.includes(action.mod))return bad();s.challenge.tools.push(action.mod);s.cash-=3;s.enhanced=true;break;
  case 'bid':if(s.phase!=='auction'||!CONTRACTS.includes(action.suit)||!Number.isInteger(action.tricks)||action.tricks<6||action.tricks>10||s.passed[s.turn]||(s.bid&&bidValue(action)<=bidValue(s.bid)))return bad();s.bid={seat:s.turn,tricks:action.tricks,suit:action.suit};s.auction.push(`${seatName(s.turn)} bids ${action.tricks}${symbol(action.suit)}`);advanceAuction(s);break;
  case 'pass':if(s.phase!=='auction'||s.passed[s.turn])return bad();s.passed[s.turn]=true;s.auction.push(`${seatName(s.turn)} passes`);advanceAuction(s);break;
  case 'discard':{
@@ -144,10 +166,10 @@ export function reduce(state:State,action:Action):State {
  s.hands[s.turn]=s.hands[s.turn].filter(c=>c.id!==card.id);s.turn=nextSeat(s.turn);if(s.plays.length===4)s.phase='trick';break;}
  case 'collect':if(s.phase!=='trick')return bad();collect(s);break;
  case 'settle':if(s.phase!=='settlement'||s.counters.settled)return bad();settle(s);break;
- case 'pub':if(s.phase!=='settlement'||!s.counters.settled)return bad();s.phase=s.deal>=3||s.composure<=0?'over':'pub';s.offer=shuffle(REGULARS.filter(r=>!s.regulars.includes(r.id)).map(r=>r.id),rng(s.seed+s.deal*601)).slice(0,3);break;
+ case 'pub':if(s.phase!=='settlement'||!s.counters.settled)return bad();s.phase=s.composure<=0||(s.challenge?s.deal%3===0&&(!challengePassed(s)||s.challenge.stage===TARGETS.length):s.deal>=3)?'over':'pub';s.offer=shuffle(REGULARS.filter(r=>!s.regulars.includes(r.id)).map(r=>r.id),rng(s.seed+s.deal*601)).slice(0,3);break;
  case 'buy':{const r=regular(action.id);if(s.phase!=='pub'||!r||!s.offer.includes(action.id)||s.cash<r.price||s.regulars.length>=5||s.regulars.includes(action.id))return bad();s.cash-=r.price;s.regulars.push(action.id);s.offer=s.offer.filter(id=>id!==action.id);break;}
- case 'enhance':{const c=s.deck.find(c=>c.id===action.id);if(s.phase!=='pub'||s.cash<3||s.enhanced||!c||!Object.hasOwn(MODIFIERS,action.mod)||c.suit==='J'&&action.mod.startsWith('ink'))return bad();c.mod=action.mod;s.cash-=3;s.enhanced=true;break;}
- case 'favour':if(s.phase!=='pub'||action.id!==null&&!s.deck.some(c=>c.id===action.id))return bad();s.favour=action.id;break;
+ case 'enhance':{const c=s.deck.find(c=>c.id===action.id);if(s.challenge||s.phase!=='pub'||s.cash<3||s.enhanced||!c||!Object.hasOwn(MODIFIERS,action.mod)||c.suit==='J'&&action.mod.startsWith('ink'))return bad();c.mod=action.mod;s.cash-=3;s.enhanced=true;break;}
+ case 'favour':if(s.challenge||s.phase!=='pub'||action.id!==null&&!s.deck.some(c=>c.id===action.id))return bad();s.favour=action.id;break;
  case 'event':if(s.phase!=='pub'||s.eventDone||!['rest','ask','leave'].includes(action.choice))return bad();s.eventDone=true;if(action.choice==='rest')s.composure=Math.min(20,s.composure+3);if(action.choice==='ask')s.insight=Math.min(3,s.insight+2);break;
  case 'next':if(s.phase!=='pub'||!s.eventDone)return bad();startDeal(s);break;
  default:return bad();

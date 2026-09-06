@@ -29,6 +29,6 @@ export function ContractBoard({s,onHistory,pulse}:{s:State;onHistory:()=>void;pu
   <button className={`trick-pile ${s.lastWinner!==null&&!isPlayer(s.lastWinner)?'pile-awarded':''}`} data-team="1" onClick={onHistory} aria-label={`Rivals: ${s.tricks[1]} tricks`}>
    <small>THEM</small><span className="pile-content"><span className="stack-cards" aria-hidden="true">{Array.from({length:s.tricks[1]},(_,i)=><i key={i} style={{translate:`${i*.7}px ${-i*1.5}px`,rotate:i%2?'90deg':'0deg'}}/>)}</span><span key={`${pulse}-${s.tricks[1]}`} className="trick-total"><PencilNumber value={s.tricks[1]}/></span></span>
   </button>
-  <span className="board-turn">{s.phase==='trick'?`${seatName(trickWinner(s.plays,s.bid!.suit))} wins`:s.phase==='kitty'||s.phase==='insight'?`${seatName(s.turn)} · discard 3`:`${isPlayer(s.turn)?'Your turn':'Thinking'} · ${seatName(s.turn)}`}</span>
+  <span className="board-turn">{s.phase==='prepare'?'Mark either hand':s.phase==='trick'?`${seatName(trickWinner(s.plays,s.bid!.suit))} wins`:s.phase==='kitty'||s.phase==='insight'?`${seatName(s.turn)} · discard 3`:`${isPlayer(s.turn)?'Your turn':'Thinking'} · ${seatName(s.turn)}`}</span>
  </div>;
 }
