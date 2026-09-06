@@ -424,3 +424,5 @@ button.primary{background:#dda649;border-color:#f3cf7e;box-shadow:inset 0 0 0 2p
  .table-screen{grid-template-rows:34px 41px minmax(65px,1fr) 122px}
  .table-screen .action-panel{padding:4px;gap:3px}
 }
+@media(orientation:landscape) and (min-width:600px) and (max-height:390px){.table-screen{grid-template-rows:34px 41px minmax(65px,1fr) 128px}}
+@media(orientation:landscape) and (min-width:600px){.table-screen .regular-card .portrait{width:auto;height:100%;aspect-ratio:4/5;flex:0 0 auto}.table-screen .regular-card>span{width:auto;flex:1}}
