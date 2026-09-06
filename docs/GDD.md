@@ -348,3 +348,7 @@ Manual acceptance: play on a phone; explain a loss from the ledger; spot trump a
 5. Repository access is verified. After the phone layout and rules baseline are ready, implement M1 in small reviewable steps. Deployment follows a tested playable slice.
 
 The game should be identifiable from an ordinary decision: **I could make seven, but if I pass I can set their nine—and the card I improved yesterday is probably in their kitty.**
+
+
+## Copy direction — September 2026
+Keep storytelling subtle and text minimal. Use short, direct labels and one-line prompts. Show costs and effects at the choice; put secondary rules in optional help. Avoid repeated instructions, narrated actions and prototype/development notes in the main flow. Let portraits and the room carry the atmosphere.

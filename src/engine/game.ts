@@ -80,7 +80,7 @@ function collect(s:State) {
  s.tricks[side(winner)]++;s.history.push({plays:[...s.plays],winner});
  if(ourWin){
  add(s,`Trick ${s.history.length} · ${seatName(winner)}`,10);
- if(s.insight>=3&&s.plays.some(p=>p.card.mod)&&capped(s,'insight',1))add(s,'The room remembers · first marked capture',0,2);
+ if(s.insight>=3&&s.plays.some(p=>p.card.mod)&&capped(s,'insight',1))add(s,'Insight · marked capture',0,2);
  for(const p of s.plays){
  if(p.card.mod==='gilt')add(s,`Gilt ${cardName(p.card)}`,15);
  if(p.card.mod==='veiled'&&s.insight>=3)add(s,`Veiled ${cardName(p.card)}`,15);
@@ -103,7 +103,7 @@ function settle(s:State) {
  let factor=1;if(success&&declaring&&s.tricks[0]===b.tricks&&s.regulars.includes('bookkeeper')){factor=2;add(s,'The Bookkeeper · exact contract',0,0,2);}
  s.penalty=success?0:declaring?failCost(s,b):1+b.tricks-6;
  s.composure=Math.max(0,s.composure-s.penalty);s.dealScore=Math.floor(s.points*s.mult*factor);s.score+=s.dealScore;s.cash+=success?3:2;
- s.message=success?(declaring?'A promise kept.':'They promised too much.'):(declaring?'A promise broken.':'They made their contract.');
+ s.message=success?(declaring?'Contract made':'Rivals set'):(declaring?'Contract missed':'Rivals made their contract');
  // Remain at settlement for review. A counter prevents duplicate rewards.
  s.counters.settled=1;
 }

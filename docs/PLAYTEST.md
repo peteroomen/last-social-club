@@ -1,4 +1,4 @@
-# First Sitting v0.1
+# First Sitting v0.2
 
 This build proves a single table across three deals. Survive the night, combine Regulars and try to improve your score. There is deliberately no room score target yet: target-setting needs actual play data.
 
@@ -34,7 +34,7 @@ The free pub favour selects one card for the next deal with weight 1.5. This is 
 
 Saves contain ruleset `club-suited-1`, seed, committed actions and a small separate campaign journal. Reload reconstructs the game through the actual reducer. Import replays and validates every action, rather than accepting arbitrary resource values.
 
-This implementation uses localStorage because the action logs are small. The GDD's IndexedDB migration is future work. Saves are device/browser-specific. Export before changing devices. No audio runs in v0.1.
+This implementation uses localStorage because the action logs are small. The GDD's IndexedDB migration is future work. Saves are device/browser-specific. Export before changing devices. Short sound effects unlock on your first tap. Mute them in Menu → Sound effects.
 
 This first slice includes the eight Regular effects but only a small story beat. It does not claim complete unlock progression, tuned AI, balanced room targets, bosses or complete MVP scope.
 
@@ -46,3 +46,6 @@ This first slice includes the eight Regular effects but only a small story beat.
 - The local cloud preview was blocked, but the published Vercel game was accessible. Browser checks covered starter selection, bidding from both seats, declarer-only kitty/discards, a complete ten-trick deal, legal-card controls, settlement, mid-trick and post-settlement reload, a shop purchase, the courtyard Insight choice and entry to deal two. No application console errors appeared; browser-extension messages were unrelated.
 - The published narrow portrait layout was visually inspected. A physical phone and a true 390-pixel browser viewport have not yet been checked; the first user playtest should prioritise card sizes, turn changes and scrolling.
 - A separate 1,000-night heuristic baseline is recorded in `BALANCE-BASELINE.md`. It indicates forgiving survival and does not establish attack/defence parity.
+
+## Landscape and room update
+Landscape is the primary phone layout. Check card selection and kitty discards without page scrolling. Between deals, move through the card room, bar and courtyard; tap the counter for enhancements and Mabel for the courtyard choice. Enhanced cards show their names, materials and a selected-card effect button. Scoring animates a receipt and the live points × Mult tally; triggered Regular portraits flash. Reduced motion disables movement.
